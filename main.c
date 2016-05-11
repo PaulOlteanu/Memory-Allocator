@@ -47,10 +47,20 @@ int main(void) {
     list.end = first;
 
     // Test code
-    void *temp = malloc_(6);
-    free_(temp);
+    void *mem1 = malloc_(6);
+    free_(mem1);
 
-    free(first);
+    linkedListNode *temp = list.start;
+    while (true) {
+        if (temp->next != NULL) {
+            linkedListNode *temp2 = temp->next;
+            free(temp);
+            temp = temp2;
+        } else {
+            free(temp);
+            break;
+        }
+    }
     free(memoryBank);
     return 0;
 }
