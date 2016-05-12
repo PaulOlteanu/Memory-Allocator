@@ -40,7 +40,7 @@ int main(void) {
     first->prev = NULL;
     first->next = NULL;
     first->start = memoryBank;
-    first->end = memoryBank + 16777216;
+    first->end = memoryBank + BYTES_IN_MEGABYTE;
     first->used = false;
 
     list.start = first;
@@ -48,8 +48,18 @@ int main(void) {
 
     // Test code
     void *mem1 = malloc_(6);
-    free_(mem1);
+    void *mem2 = malloc_(20);
+    void *mem3 = malloc_(40);
 
+    free_(mem2);
+    free_(mem1);
+    free_(mem3);
+
+    // Cleanup code in case there aren't sufficient `free_` calls for the number of `malloc_` calls
+    // It's like memory leak-ception
+
+    // If it is done properly however, list.start should equal list.end
+    // This means that if done properly, all that should be necessary is a call to free(list.start)
     linkedListNode *temp = list.start;
     while (true) {
         if (temp->next != NULL) {
@@ -61,6 +71,7 @@ int main(void) {
             break;
         }
     }
+    free(first);
     free(memoryBank);
     return 0;
 }
@@ -70,7 +81,7 @@ linkedListNode *getmem_(size_t bytes) {
 
     // Loop through linked list from the start till it finds an open chunk large enough
     while (true) {
-        if (check->end - check->start >= bytes) {
+        if (!check->used && check->end - check->start >= bytes) {
             return check;
         } else {
             if (check->next) {
@@ -96,12 +107,11 @@ void *malloc_(size_t bytes) {
 
     match->next = next;
 
-    next->start = match->end;
+    next->end = match->end;
 
     match->end = match->start + bytes;
 
-    next->end = next->start + bytes;
-
+    next->start = match->end;
     next->used = false;
 
     if(list.end == match) {
@@ -110,6 +120,8 @@ void *malloc_(size_t bytes) {
     return (void *) match->start;
 }
 
+// Not sure if this is implemented correctly
+// Just loops though all blocks till it finds one where the start equals `ptr`
 void free_(void *ptr) {
     linkedListNode *check = list.start;
 
@@ -129,15 +141,36 @@ void free_(void *ptr) {
         return;
     }
 
+    // At least if it can't be joined with another block of memory, it'll be marked as free
     check->used = false;
 
-    if (check->used == false && check->next != NULL && check->next->used == false) {
+    // Check if the memory block after it is also not used
+    // If it's free, join them
+    if (check->next != NULL && check->next->used == false) {
         check->end = check->next->end;
         if (list.end == check->next) {
             list.end = check;
         }
-        linkedListNode *temp = check->next->next;
-        free(check->next);
-        check->next = temp;
+        if (check->next->next != NULL) {
+            linkedListNode *temp = check->next->next;
+            free(check->next);
+            check->next = temp;
+            check->next->prev = check;
+        }
+    }
+
+    // Check if the memory block before it is also not used
+    // If it's free, join them
+    if (check->prev != NULL && check->prev->used == false) {
+        check->start = check->prev->start;
+        if (list.start == check->prev) {
+            list.start = check;
+        }
+        if (check->prev->prev != NULL) {
+            linkedListNode *temp = check->prev->prev;
+            free(check->prev);
+            check->prev = temp;
+            check->prev->next = check;
+        }
     }
 }
