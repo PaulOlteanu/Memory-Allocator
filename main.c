@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 
 #define BYTES_IN_MEGABYTE 16777216
@@ -81,7 +82,7 @@ linkedListNode *getmem_(size_t bytes) {
 
     // Loop through linked list from the start till it finds an open chunk large enough
     while (true) {
-        if (!check->used && check->end - check->start >= bytes) {
+        if (!check->used && check->end - check->start >= (ptrdiff_t) bytes) {
             return check;
         } else {
             if (check->next) {
