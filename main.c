@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define BYTES_IN_MEGABYTE 16777216
+#define BYTES_IN_MEGABYTE 1*1024*1024
 
 // Nodes for the linked linked list
 // The weird `typedef`ing is to be able to use pointers to itself
