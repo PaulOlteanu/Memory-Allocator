@@ -3,8 +3,6 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#define BYTES_IN_MEGABYTE 1*1024*1024
-
 // Nodes for the linked linked list
 // The weird `typedef`ing is to be able to use pointers to itself
 typedef struct LLN linkedListNode;
@@ -34,14 +32,14 @@ void free_(void *ptr);
 linkedList list;
 
 int main(void) {
-    void *memoryBank = malloc(BYTES_IN_MEGABYTE);
+    void *memoryBank = malloc(16 * 1024 * 1024);
 
     linkedListNode *first = (linkedListNode *) malloc(sizeof *first);
 
     first->prev = NULL;
     first->next = NULL;
     first->start = memoryBank;
-    first->end = memoryBank + BYTES_IN_MEGABYTE;
+    first->end = memoryBank + 16 * 1024 * 1024;
     first->used = false;
 
     list.start = first;
